@@ -15,11 +15,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Admin por defecto (solo desarrollo), el mismo que creaba bootstrap.js en el front
+        User::updateOrCreate(
+            ['email' => 'admin@gym.local'],
+            [
+                'name' => 'Admin System',
+                'nombre' => 'Admin',
+                'apellido' => 'System',
+                'dni' => '00000000',
+                'password' => 'admin123',
+                'rol' => 'admin',
+            ]
+        );
     }
 }
