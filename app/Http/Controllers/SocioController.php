@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Socio;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class SocioController extends Controller
@@ -26,6 +28,67 @@ class SocioController extends Controller
         return response()->json([
             'socios' => Socio::with(self::CON_RELACIONES)->orderBy('id')->get(),
         ]);
+    }
+
+    /**
+     * Crear un socio
+     *
+     * Crea el user (rol `cliente`) y su membresía. Devuelve una contraseña temporal aleatoria que se muestra solo en esta respuesta.
+     */
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'nombre' => 'required|string|max:255',
+            'apellido' => 'required|string|max:255',
+            /** Único: no puede haber dos usuarios con el mismo DNI. */
+            'dni' => 'required|string|unique:users,dni',
+            'telefono' => 'nullable|string|max:20',
+            'direccion' => 'nullable|string|max:255',
+            /** Único: no puede haber dos usuarios con el mismo email. */
+            'email' => 'required|string|email|max:255|unique:users,email',
+            /** Tiene que ser un plan activo. */
+            'plan_id' => ['required', 'integer', Rule::exists('planes', 'id')->where('activo', true)],
+            /** Formato AAAA-MM-DD. Si no se manda, se usa la fecha del día. */
+            'fecha_inicio' => 'nullable|date_format:Y-m-d',
+            'notas' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Datos inválidos',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $datos = $validator->validated();
+        $password = Str::password(12, symbols: false);
+
+        $socio = DB::transaction(function () use ($datos, $password) {
+            $user = User::create([
+                'name' => "{$datos['nombre']} {$datos['apellido']}",
+                'nombre' => $datos['nombre'],
+                'apellido' => $datos['apellido'],
+                'dni' => $datos['dni'],
+                'telefono' => $datos['telefono'] ?? null,
+                'direccion' => $datos['direccion'] ?? null,
+                'email' => $datos['email'],
+                'password' => $password,
+                'rol' => 'cliente',
+            ]);
+
+            return $user->socio()->create([
+                'plan_id' => $datos['plan_id'],
+                // fecha del día en Argentina (la app guarda en UTC)
+                'fecha_inicio' => $datos['fecha_inicio'] ?? now('America/Argentina/Buenos_Aires')->toDateString(),
+                'notas' => $datos['notas'] ?? null,
+            ]);
+        });
+
+        return response()->json([
+            'message' => 'Socio creado correctamente',
+            'socio' => $socio->fresh(self::CON_RELACIONES),
+            'password_temporal' => $password,
+        ], 201);
     }
 
     /**
