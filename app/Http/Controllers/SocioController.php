@@ -79,8 +79,7 @@ class SocioController extends Controller
 
             return $user->socio()->create([
                 'plan_id' => $datos['plan_id'],
-                // fecha del día en Argentina (la app guarda en UTC)
-                'fecha_inicio' => $datos['fecha_inicio'] ?? now('America/Argentina/Buenos_Aires')->toDateString(),
+                'fecha_inicio' => $datos['fecha_inicio'] ?? now()->toDateString(),
                 'notas' => $datos['notas'] ?? null,
             ]);
         });
