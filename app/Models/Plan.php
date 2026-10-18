@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['nombre', 'frecuencia_semanal', 'precio', 'activo'])]
 class Plan extends Model
 {
@@ -16,5 +17,10 @@ class Plan extends Model
             'precio' => 'decimal:2',
             'activo' => 'boolean',
         ];
+    }
+
+    public function socios(): HasMany
+    {
+        return $this->hasMany(Socio::class);
     }
 }
