@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\Validator;
 
 class PlanController extends Controller
 {
+    /**
+     * Listar planes
+     *
+     * Si el usuario es admin devuelve todos los planes, incluidos los inactivos. Para el resto, solo los activos.
+     */
     public function index(Request $request)
     {
         $query = Plan::orderBy('id');
@@ -21,6 +26,9 @@ class PlanController extends Controller
         ]);
     }
 
+    /**
+     * Crear un plan
+     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), $this->rules());
@@ -40,9 +48,16 @@ class PlanController extends Controller
         ], 201);
     }
 
+    /**
+     * Modificar un plan
+     *
+     * Exige el plan completo: `nombre` y `precio` son obligatorios aunque no cambien.
+     * Con `activo: true` se reactiva un plan dado de baja.
+     */
     public function update(Request $request, Plan $plan)
     {
         $validator = Validator::make($request->all(), $this->rules() + [
+            /** `false` lo da de baja, `true` lo reactiva. Si no se manda, no cambia. */
             'activo' => 'sometimes|boolean',
         ]);
 
@@ -61,8 +76,12 @@ class PlanController extends Controller
         ]);
     }
 
-    // Baja lógica: el plan deja de estar disponible pero no se borra.
     // El chequeo de socios activos con este plan se agrega con el módulo Socios.
+    /**
+     * Dar de baja un plan
+     *
+     * Baja lógica: pone `activo = false` y no borra el registro. El plan deja de aparecer en el listado para los que no son admin.
+     */
     public function destroy(Plan $plan)
     {
         $plan->update(['activo' => false]);
@@ -74,6 +93,7 @@ class PlanController extends Controller
     {
         return [
             'nombre' => 'required|string|max:255',
+            /** Clases por semana. `null` = pase libre. */
             'frecuencia_semanal' => 'nullable|integer|min:1|max:255',
             'precio' => 'required|numeric|min:0',
         ];

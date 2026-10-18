@@ -9,15 +9,22 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
+    /**
+     * Registrar un cliente
+     *
+     * Crea un usuario con rol `cliente`. El rol no se puede elegir desde este endpoint.
+     */
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'nombre' => 'required|string|max:255',
             'apellido' => 'required|string|max:255',
+            /** Único: no puede haber dos usuarios con el mismo DNI. */
             'dni' => 'required|string|unique:users,dni',
             'telefono' => 'nullable|string|max:20',
             'direccion' => 'nullable|string|max:255',
+            /** Único: no puede haber dos usuarios con el mismo email. */
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
         ]);
@@ -54,9 +61,16 @@ class AuthController extends Controller
         ], 201);
     }
 
+    /**
+     * Iniciar sesión
+     *
+     * Devuelve un token de Sanctum. Para los endpoints protegidos se manda como `Authorization: Bearer <token>`.
+     * Si el usuario no existe o la contraseña no coincide, responde 422 con "Credenciales inválidas".
+     */
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            /** Email o DNI del usuario. */
             'login' => 'required|string|max:255',
             'password' => 'required|string',
         ]);
@@ -90,6 +104,11 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Usuario autenticado
+     *
+     * Devuelve los datos del usuario dueño del token.
+     */
     public function me(Request $request)
     {
         return response()->json([
@@ -97,6 +116,11 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Cerrar sesión
+     *
+     * Revoca solo el token usado en este pedido. Si el usuario tiene otros tokens, siguen siendo válidos.
+     */
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
