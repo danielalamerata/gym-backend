@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Socio;
+use App\Models\Plan;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -106,6 +107,7 @@ class SocioController extends Controller
      *
      * Exige el socio completo: datos personales (se guardan en users) y membresía (se guardan en socios).
      * Con `estado: "inactivo"` se da de baja y se revocan sus tokens. Con `estado: "activo"` se reactiva.
+     * Un socio que queda activo tiene que tener un plan activo: si su plan está dado de baja, hay que asignarle otro.
      */
     public function update(Request $request, Socio $socio)
     {
@@ -118,7 +120,7 @@ class SocioController extends Controller
             'direccion' => 'nullable|string|max:255',
             /** Único: no puede haber dos usuarios con el mismo email. */
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($socio->user_id)],
-            /** Tiene que ser un plan activo, salvo que sea el plan que el socio ya tiene. */
+            /** Tiene que ser un plan activo. Solo puede conservar su plan actual dado de baja si el socio queda inactivo. */
             'plan_id' => ['required', 'integer', Rule::exists('planes', 'id')->where(
                 fn ($query) => $query->where('activo', true)->orWhere('id', $socio->plan_id)
             )],
@@ -127,6 +129,22 @@ class SocioController extends Controller
             'fecha_inicio' => 'required|date_format:Y-m-d',
             'notas' => 'nullable|string',
         ]);
+
+        // Ningún socio activo puede tener un plan inactivo
+        $validator->after(function ($validator) use ($request) {
+            if ($validator->errors()->hasAny(['plan_id', 'estado'])) {
+                return;
+            }
+
+            $planActivo = Plan::where('id', $request->input('plan_id'))->value('activo');
+
+            if ($request->input('estado') === 'activo' && ! $planActivo) {
+                $validator->errors()->add(
+                    'plan_id',
+                    'No se puede activar un socio con un plan dado de baja. Asignale un plan activo.'
+                );
+            }
+        });
 
         if ($validator->fails()) {
             return response()->json([
