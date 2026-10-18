@@ -76,14 +76,25 @@ class PlanController extends Controller
         ]);
     }
 
-    // El chequeo de socios activos con este plan se agrega con el módulo Socios.
     /**
      * Dar de baja un plan
      *
      * Baja lógica: pone `activo = false` y no borra el registro. El plan deja de aparecer en el listado para los que no son admin.
+     * Si el plan tiene socios activos no se da de baja y responde 409.
      */
     public function destroy(Plan $plan)
     {
+        $sociosActivos = $plan->socios()->where('estado', 'activo')->count();
+
+        if ($sociosActivos > 0) {
+            return response()->json([
+                'message' => $sociosActivos === 1
+                    ? 'No se puede dar de baja el plan: tiene 1 socio activo.'
+                    : "No se puede dar de baja el plan: tiene {$sociosActivos} socios activos.",
+                'socios_activos' => $sociosActivos,
+            ], 409);
+        }
+
         $plan->update(['activo' => false]);
 
         return response()->noContent();
