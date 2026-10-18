@@ -8,10 +8,16 @@ use Illuminate\Support\Facades\Validator;
 
 class PlanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $query = Plan::orderBy('id');
+
+        if ($request->user()->rol !== 'admin') {
+            $query->where('activo', true);
+        }
+
         return response()->json([
-            'planes' => Plan::where('activo', true)->orderBy('id')->get(),
+            'planes' => $query->get(),
         ]);
     }
 
