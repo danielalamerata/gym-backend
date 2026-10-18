@@ -20,6 +20,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/planes/{plan}', [PlanController::class, 'destroy']);
 
         Route::get('/socios', [SocioController::class, 'index']);
+        Route::post('/socios', [SocioController::class, 'store']);
         Route::get('/socios/{socio}', [SocioController::class, 'show']);
         Route::put('/socios/{socio}', [SocioController::class, 'update']);
         Route::delete('/socios/{socio}', [SocioController::class, 'destroy']);
