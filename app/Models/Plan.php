@@ -23,4 +23,9 @@ class Plan extends Model
     {
         return $this->hasMany(Socio::class);
     }
+
+    public function pagos(): HasMany
+    {
+        return $this->hasMany(Pago::class);
+    }
 }
