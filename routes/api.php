@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\SocioController;
 use Illuminate\Support\Facades\Route;
@@ -24,5 +25,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/socios/{socio}', [SocioController::class, 'show']);
         Route::put('/socios/{socio}', [SocioController::class, 'update']);
         Route::delete('/socios/{socio}', [SocioController::class, 'destroy']);
+
+        Route::get('/configuracion', [ConfiguracionController::class, 'show']);
+        Route::put('/configuracion', [ConfiguracionController::class, 'update']);
     });
 });
