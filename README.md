@@ -42,6 +42,35 @@ php artisan serve
 
 La API corre en `http://localhost:8000`.
 
+## Pagos automáticos
+
+El comando `pagos:generar` crea el pago pendiente del mes para cada socio activo. Saltea a los que ya tienen el pago de ese mes, así que se puede correr varias veces sin duplicar nada.
+
+```bash
+php artisan pagos:generar               # mes actual
+php artisan pagos:generar --mes=2026-11 # un mes puntual (AAAA-MM)
+```
+
+La forma de cobrar se elige en el `.env` (por ahora la única política es `mensual`: mes completo al precio actual del plan, con vencimiento el día configurado por el admin):
+
+```env
+COBROS_POLITICA=mensual
+```
+
+El comando está programado para correr todos los días a las 00:05 (hora de Argentina). Así, un socio que se da de alta a mitad de mes recibe esa misma noche el pago del mes completo.
+
+Para que la programación funcione, el scheduler de Laravel tiene que estar corriendo:
+
+```bash
+# en local
+php artisan schedule:work
+```
+
+```bash
+# en producción, una línea en el crontab del servidor
+* * * * * cd /ruta/al/proyecto && php artisan schedule:run >> /dev/null 2>&1
+```
+
 ## Endpoints principales
 
 | Método | Endpoint | Descripción | Auth |
