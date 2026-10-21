@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['socio_id', 'plan_id', 'mes_abonado', 'monto_original', 'monto_mora', 'fecha_vencimiento', 'estado', 'fecha_pago', 'metodo_pago', 'notas'])]
-#[Appends(['vencido'])]
+#[Appends(['vencido', 'total'])]
 class Pago extends Model
 {
     protected $table = 'pagos';
@@ -50,5 +50,16 @@ class Pago extends Model
         return Attribute::get(
             fn () => $this->estado === 'pendiente' && $this->fecha_vencimiento->lt(today())
         );
+    }
+
+    // monto_original + monto_mora (null = sin mora); se suma en centavos para no arrastrar errores de float
+    protected function total(): Attribute
+    {
+        return Attribute::get(function () {
+            $centavos = fn (?string $monto) => $monto === null ? 0 : (int) str_replace('.', '', $monto);
+            $total = $centavos($this->monto_original) + $centavos($this->monto_mora);
+
+            return sprintf('%d.%02d', intdiv($total, 100), $total % 100);
+        });
     }
 }

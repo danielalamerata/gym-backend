@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ConfiguracionController;
+use App\Http\Controllers\PagoController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\SocioController;
 use Illuminate\Support\Facades\Route;
@@ -28,5 +29,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/configuracion', [ConfiguracionController::class, 'show']);
         Route::put('/configuracion', [ConfiguracionController::class, 'update']);
+
+        Route::get('/pagos', [PagoController::class, 'index']);
+        Route::get('/pagos/pendientes', [PagoController::class, 'pendientes']);
+        Route::get('/pagos/socio/{socio}', [PagoController::class, 'historialSocio']);
+        Route::post('/pagos/{pago}/cobrar', [PagoController::class, 'cobrar']);
     });
 });
