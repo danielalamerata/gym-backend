@@ -34,5 +34,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/pagos/pendientes', [PagoController::class, 'pendientes']);
         Route::get('/pagos/socio/{socio}', [PagoController::class, 'historialSocio']);
         Route::post('/pagos/{pago}/cobrar', [PagoController::class, 'cobrar']);
+        Route::get('/pagos/{pago}/recibo', [PagoController::class, 'recibo']);
     });
 });
