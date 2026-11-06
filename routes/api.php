@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ConfiguracionController;
+use App\Http\Controllers\MisPagosController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\SocioController;
@@ -15,6 +16,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::get('/planes', [PlanController::class, 'index']);
+
+    Route::get('/mis-pagos', [MisPagosController::class, 'index']);
+    Route::get('/mis-pagos/{pago}/recibo', [MisPagosController::class, 'recibo'])->where('pago', '[0-9]{1,18}');
 
     Route::middleware('admin')->group(function () {
         Route::post('/planes', [PlanController::class, 'store']);
